@@ -11,7 +11,17 @@ from io import BytesIO
 import re
 
 from media_mover import move_files_by_date, clean_empty_folders
-from config import API_KEY, API_URL, SIMILARITY_THRESHOLD, UPLOAD_FOLDER, DEBUG, PORT
+
+# 从config.json读取配置
+with open('config.json', 'r', encoding='utf-8') as f:
+    config = json.load(f)
+
+API_KEY = config['API_KEY']
+API_URL = config['API_URL']
+SIMILARITY_THRESHOLD = config['SIMILARITY_THRESHOLD']
+UPLOAD_FOLDER = config['UPLOAD_FOLDER']
+DEBUG = config['DEBUG']
+PORT = config['PORT']
 
 app = Flask(__name__)
 

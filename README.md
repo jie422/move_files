@@ -18,8 +18,8 @@ pip install requests Pillow numpy
 
 ## 配置
 1. 打开 `image_analyzer.py` 文件
-2. 替换 `API_KEY` 为真实的千文API密钥
-3. 确认 `API_URL` 是正确的千文图像识别API地址
+2. 替换 `API_KEY` 为真实的模型API密钥
+3. 确认 `API_URL` 是正确的模型API地址
 
 ## 使用方法
 1. 将脚本放在包含要处理图像的目录中
@@ -31,7 +31,7 @@ pip install requests Pillow numpy
 4. 处理完成后，图像会按拍摄年月分类存储在对应的文件夹中
 
 ## 注意事项
-- 确保网络连接正常，以便调用千文API
+- 确保网络连接正常，以便调用模型API
 - 图像文件需要是常见格式（.jpg, .jpeg, .png, .bmp, .gif）
 - 脚本会使用图像的EXIF信息获取拍摄日期，如果没有EXIF信息，则使用文件修改时间
 - 移动图像时，如果目标文件已存在，会跳过移动操作

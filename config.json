@@ -1,0 +1,8 @@
+{
+  "API_KEY": "替换KEY",
+  "API_URL": "替换URL",
+  "SIMILARITY_THRESHOLD": 0.8,
+  "UPLOAD_FOLDER": "uploads",
+  "DEBUG": true,
+  "PORT": 5000
+}

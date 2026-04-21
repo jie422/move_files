@@ -6,12 +6,13 @@ from PIL import Image
 import numpy as np
 import shutil
 
-# 千文图像识别API配置
-API_KEY = "your_api_key_here"  # 请替换为真实的API密钥
-API_URL = "url"  # 假设的API地址
+# 从config.json读取配置
+with open('config.json', 'r', encoding='utf-8') as f:
+    config = json.load(f)
 
-# 配置参数
-SIMILARITY_THRESHOLD = 0.8  # 相似度阈值
+API_KEY = config['API_KEY']
+API_URL = config['API_URL']
+SIMILARITY_THRESHOLD = config['SIMILARITY_THRESHOLD']
 IMAGE_EXTENSIONS = ['.jpg', '.jpeg', '.png', '.bmp', '.gif']
 
 def get_image_info(image_path):
