@@ -1,0 +1,184 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>媒体文件移动工具</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #f5f5f5;
+            color: #333;
+        }
+        
+        .container {
+            max-width: 600px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+        
+        h1 {
+            text-align: center;
+            margin-bottom: 30px;
+            color: #2c3e50;
+        }
+        
+        .form-group {
+            margin-bottom: 20px;
+        }
+        
+        label {
+            display: block;
+            margin-bottom: 5px;
+            font-weight: bold;
+        }
+        
+        input[type="text"] {
+            width: 100%;
+            padding: 10px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            font-size: 16px;
+        }
+        
+        button {
+            background-color: #3498db;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 4px;
+            font-size: 16px;
+            cursor: pointer;
+            margin-right: 10px;
+        }
+        
+        button:hover {
+            background-color: #2980b9;
+        }
+        
+        .status {
+            margin-top: 20px;
+            padding: 10px;
+            border-radius: 4px;
+        }
+        
+        .status.success {
+            background-color: #d4edda;
+            color: #155724;
+            border: 1px solid #c3e6cb;
+        }
+        
+        .status.error {
+            background-color: #f8d7da;
+            color: #721c24;
+            border: 1px solid #f5c6cb;
+        }
+        
+        .progress {
+            width: 100%;
+            height: 20px;
+            background-color: #f0f0f0;
+            border-radius: 10px;
+            margin-top: 15px;
+            overflow: hidden;
+        }
+        
+        .progress-bar {
+            height: 100%;
+            background-color: #3498db;
+            width: 0%;
+            transition: width 0.3s ease;
+        }
+        
+        .footer {
+            margin-top: 30px;
+            text-align: center;
+            color: #666;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>媒体文件移动工具</h1>
+        
+        <div class="form-group">
+            <label for="sourcePath">源路径</label>
+            <input type="text" id="sourcePath" placeholder="例如：D:/path/to/source">
+        </div>
+        
+        <div class="form-group">
+            <label for="destinationPath">目标路径</label>
+            <input type="text" id="destinationPath" placeholder="例如：D:/path/to/destination">
+        </div>
+        
+        <button onclick="moveFiles()">开始移动文件</button>
+        <button onclick="clearFields()">清空输入</button>
+        
+        <div class="progress">
+            <div class="progress-bar" id="progressBar"></div>
+        </div>
+        
+        <div id="status" class="status"></div>
+        
+        <div class="footer">
+            <p>© 2026 媒体文件移动工具</p>
+        </div>
+    </div>
+    
+    <script>
+        function moveFiles() {
+            const sourcePath = document.getElementById('sourcePath').value;
+            const destinationPath = document.getElementById('destinationPath').value;
+            
+            if (!sourcePath || !destinationPath) {
+                showStatus('请输入源路径和目标路径', 'error');
+                return;
+            }
+            
+            showStatus('正在移动文件...', 'success');
+            updateProgress(0);
+            
+            // 这里可以通过后端API调用Python脚本
+            // 由于是本地运行，我们可以通过URL参数传递路径
+            const url = `http://localhost:5000/api/organize?source_path=${encodeURIComponent(sourcePath)}&destination_path=${encodeURIComponent(destinationPath)}`;
+            
+            fetch(url)
+                .then(response => response.json())
+                .then(data => {
+                    if (data.error) {
+                        showStatus(data.error, 'error');
+                    } else {
+                        updateProgress(100);
+                        showStatus(`文件移动完成！移动了 ${data.total_moved} 个文件，失败 ${data.total_failed} 个`, 'success');
+                    }
+                })
+                .catch(error => {
+                    showStatus('移动文件失败: ' + error.message, 'error');
+                });
+        }
+        
+        function clearFields() {
+            document.getElementById('sourcePath').value = '';
+            document.getElementById('destinationPath').value = '';
+            document.getElementById('status').innerHTML = '';
+            document.getElementById('progressBar').style.width = '0%';
+        }
+        
+        function showStatus(message, type) {
+            const statusElement = document.getElementById('status');
+            statusElement.textContent = message;
+            statusElement.className = `status ${type}`;
+        }
+        
+        function updateProgress(percentage) {
+            document.getElementById('progressBar').style.width = `${percentage}%`;
+        }
+    </script>
+</body>
+</html>
