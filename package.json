@@ -1,0 +1,20 @@
+{
+  "name": "media-file-mover",
+  "version": "1.0.0",
+  "description": "媒体文件移动工具",
+  "main": "move_files_server.js",
+  "scripts": {
+    "start": "node move_files_server.js",
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "keywords": [
+    "media",
+    "file",
+    "mover"
+  ],
+  "author": "",
+  "license": "MIT",
+  "dependencies": {
+    "express": "^4.18.2"
+  }
+}
