@@ -10,6 +10,8 @@ import base64
 from io import BytesIO
 import re
 
+from config import API_KEY, API_URL, SIMILARITY_THRESHOLD, UPLOAD_FOLDER, DEBUG, PORT
+
 # 尝试导入pillow-heif来处理HEIC格式
 try:
     import pillow_heif
@@ -19,12 +21,7 @@ except ImportError:
 
 app = Flask(__name__)
 
-# 千文图像识别API配置
-API_KEY = ""  # 请替换为真实的API密钥
-API_URL = "https://dashscope.aliyuncs.com/compatible-mode/v1"  # 假设的API地址
-
 # 配置参数
-SIMILARITY_THRESHOLD = 0.8  # 相似度阈值
 IMAGE_EXTENSIONS = [
     '.jpg', '.jpeg', '.jfif',  # JPEG格式
     '.png',  # PNG格式
@@ -42,7 +39,6 @@ IMAGE_EXTENSIONS = [
     '.cr2', '.nef', '.arw', '.dng',  # 相机RAW格式
     '.ai', '.eps',  # 矢量图形格式
 ]
-UPLOAD_FOLDER = 'uploads'
 SCRIPT_DIR = os.path.dirname(os.path.abspath(__file__))  # 获取脚本所在目录
 if not os.path.exists(UPLOAD_FOLDER):
     os.makedirs(UPLOAD_FOLDER)
@@ -646,4 +642,4 @@ def process_folder():
     return jsonify(front_end_results)
 
 if __name__ == '__main__':
-    app.run(debug=True, port=5000)
+    app.run(debug=DEBUG, port=PORT)

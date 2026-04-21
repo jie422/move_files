@@ -11,6 +11,7 @@ from io import BytesIO
 import re
 
 from media_mover import move_files_by_date, clean_empty_folders
+from config import API_KEY, API_URL, SIMILARITY_THRESHOLD, UPLOAD_FOLDER, DEBUG, PORT
 
 app = Flask(__name__)
 
@@ -20,7 +21,6 @@ IMAGE_EXTENSIONS = [
     '.cr2', '.nef', '.arw', '.dng', '.ai', '.eps'
 ]
 
-UPLOAD_FOLDER = 'uploads'
 SCRIPT_DIR = os.path.dirname(os.path.abspath(__file__))
 if not os.path.exists(UPLOAD_FOLDER):
     os.makedirs(UPLOAD_FOLDER)
@@ -30,10 +30,6 @@ try:
     pillow_heif.register_heif_opener()
 except ImportError:
     print("pillow-heif not installed, HEIC images may not be supported")
-
-API_KEY = "替换KEY"
-API_URL = "https://dashscope.aliyuncs.com/compatible-mode/v1"
-SIMILARITY_THRESHOLD = 0.8
 
 EXT_TO_MIME = {
     '.jpg': 'jpeg', '.jpeg': 'jpeg', '.jfif': 'jpeg', '.png': 'png', '.gif': 'gif',
@@ -498,4 +494,4 @@ def process_folder():
     return jsonify(front_end_results)
 
 if __name__ == '__main__':
-    app.run(debug=True, port=5000)
+    app.run(debug=DEBUG, port=PORT)
