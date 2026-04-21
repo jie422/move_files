@@ -1,0 +1,493 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>图像分析与分类工具</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #f5f5f5;
+            color: #333;
+        }
+        
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+        
+        h1 {
+            text-align: center;
+            margin-bottom: 30px;
+            color: #2c3e50;
+        }
+        
+        .controls {
+            background-color: white;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+            margin-bottom: 20px;
+        }
+        
+        .form-group {
+            margin-bottom: 15px;
+        }
+        
+        label {
+            display: block;
+            margin-bottom: 5px;
+            font-weight: bold;
+        }
+        
+        input[type="text"],
+        input[type="number"],
+        input[type="file"] {
+            width: 100%;
+            padding: 10px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            font-size: 16px;
+        }
+        
+        button {
+            background-color: #3498db;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 4px;
+            font-size: 16px;
+            cursor: pointer;
+            margin-right: 10px;
+        }
+        
+        button:hover {
+            background-color: #2980b9;
+        }
+        
+        .results {
+            background-color: white;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+        
+        .image-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+            gap: 15px;
+            margin-top: 20px;
+        }
+        
+        .image-item {
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            padding: 10px;
+            text-align: center;
+        }
+        
+        .image-item img {
+            max-width: 100%;
+            max-height: 150px;
+            object-fit: cover;
+            border-radius: 4px;
+            margin-bottom: 10px;
+        }
+        
+        .similarity-group {
+            margin-top: 30px;
+            padding: 15px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            background-color: #f9f9f9;
+        }
+        
+        .similarity-group h3 {
+            margin-bottom: 15px;
+            color: #2c3e50;
+        }
+        
+        .action-buttons {
+            margin-top: 15px;
+        }
+        
+        .status {
+            margin-top: 20px;
+            padding: 10px;
+            border-radius: 4px;
+        }
+        
+        .status.success {
+            background-color: #d4edda;
+            color: #155724;
+            border: 1px solid #c3e6cb;
+        }
+        
+        .status.error {
+            background-color: #f8d7da;
+            color: #721c24;
+            border: 1px solid #f5c6cb;
+        }
+        
+        .progress {
+            width: 100%;
+            height: 20px;
+            background-color: #f0f0f0;
+            border-radius: 10px;
+            margin-top: 15px;
+            overflow: hidden;
+        }
+        
+        .progress-bar {
+            height: 100%;
+            background-color: #3498db;
+            width: 0%;
+            transition: width 0.3s ease;
+        }
+    </style>
+</head>
+<body onload="initializePage()">
+    <div class="container">
+        <h1>图像分析与分类工具</h1>
+        
+        <div class="controls">
+            <div class="form-group">
+                <label for="folderSelect">选择文件夹</label>
+                <select id="folderSelect" onchange="onFolderChange()">
+                    <option value="all">所有文件夹</option>
+                </select>
+            </div>
+            
+            <div class="form-group">
+                <label for="customFolder">手动选择文件夹</label>
+                <input type="file" id="customFolder" webkitdirectory directory multiple style="display: none;">
+                <button onclick="document.getElementById('customFolder').click()">选择文件夹</button>
+                <span id="selectedFolderPath" style="margin-left: 10px;">未选择</span>
+            </div>
+            <button onclick="scanFolders()">刷新文件夹列表</button>
+            <button onclick="scanSelectedFolder()">扫描选定文件夹</button>
+            <button onclick="scanCustomPath()">扫描手动路径</button>
+            <button onclick="autoSelectFiles()">自动选择30条</button>
+            <button onclick="processAndOrganize()">分类存储</button>
+            <button onclick="clearResults()">清空结果</button>
+        </div>
+        
+        <div class="results">
+            <h2>分析结果</h2>
+            
+            <div class="progress">
+                <div class="progress-bar" id="progressBar"></div>
+            </div>
+            
+            <div id="status" class="status"></div>
+            
+            <div id="similarityGroups"></div>
+            
+            <div id="imageGrid" class="image-grid"></div>
+        </div>
+    </div>
+    
+    <script>
+        function initializePage() {
+            // 页面加载时初始化
+            scanFolders();
+        }
+        
+        function scanFolders() {
+            showStatus('正在扫描文件夹...', 'success');
+            
+            fetch('/get-image-folders')
+            .then(response => response.json())
+            .then(data => {
+                const folderSelect = document.getElementById('folderSelect');
+                // 清空除了"所有文件夹"之外的选项
+                while (folderSelect.options.length > 1) {
+                    folderSelect.remove(1);
+                }
+                
+                if (data.folders && data.folders.length > 0) {
+                    data.folders.forEach(folder => {
+                        const option = document.createElement('option');
+                        option.value = folder === '当前目录' ? '.' : folder;
+                        option.textContent = folder;
+                        folderSelect.appendChild(option);
+                    });
+                    showStatus(`找到 ${data.total} 个包含图片的文件夹`, 'success');
+                } else {
+                    showStatus('没有找到包含图片的文件夹', 'error');
+                }
+            })
+            .catch(error => {
+                showStatus('扫描文件夹失败: ' + error.message, 'error');
+            });
+        }
+        
+        function scanSelectedFolder() {
+            const selectedFolder = document.getElementById('folderSelect').value;
+            showStatus('正在扫描选定文件夹...', 'success');
+            updateProgress(0);
+            
+            // 调用扫描本地图像的API
+            fetch('/scan-local')
+            .then(response => response.json())
+            .then(data => {
+                if (data.error) {
+                    showStatus(data.error, 'error');
+                } else {
+                    // 如果选择了特定文件夹，过滤结果
+                    let filteredImages = data.images;
+                    if (selectedFolder !== 'all') {
+                        const folderName = selectedFolder === '.' ? '当前目录' : selectedFolder;
+                        filteredImages = data.images.filter(img => img.folder === folderName);
+                    }
+                    
+                    updateProgress(100);
+                    displayResults({ images: filteredImages, total: filteredImages.length });
+                    showStatus(`扫描完成，找到 ${filteredImages.length} 张图像`, 'success');
+                }
+            })
+            .catch(error => {
+                showStatus('扫描失败: ' + error.message, 'error');
+            });
+        }
+        
+        function onFolderChange() {
+            // 当文件夹选择变化时，自动扫描该文件夹
+            scanSelectedFolder();
+        }
+        
+        // 文件夹选择事件
+        document.getElementById('customFolder').addEventListener('change', function(e) {
+            const files = e.target.files;
+            if (files.length > 30) {
+                showStatus('最多只能选择30个文件', 'error');
+                // 清空选择
+                e.target.value = '';
+                document.getElementById('selectedFolderPath').textContent = '未选择';
+                return;
+            }
+            
+            if (files.length > 0) {
+                // 获取第一个文件的路径，提取文件夹路径
+                const firstFile = files[0];
+                const folderPath = firstFile.webkitRelativePath ? firstFile.webkitRelativePath.split('/')[0] : '';
+                const fullPath = firstFile.path ? firstFile.path.replace(firstFile.name, '') : '';
+                
+                document.getElementById('selectedFolderPath').textContent = fullPath || '已选择文件夹';
+                
+                // 自动扫描选择的文件夹
+                showStatus('正在扫描选择的文件夹...', 'success');
+                updateProgress(0);
+                
+                // 准备文件数据
+                const formData = new FormData();
+                for (let i = 0; i < files.length; i++) {
+                    if (files[i].type.startsWith('image/')) {
+                        formData.append('files', files[i]);
+                    }
+                }
+                
+                // 调用上传API
+                fetch('/upload', {
+                    method: 'POST',
+                    body: formData
+                })
+                .then(response => response.json())
+                .then(data => {
+                    if (data.error) {
+                        showStatus(data.error, 'error');
+                    } else {
+                        updateProgress(100);
+                        displayResults(data);
+                        showStatus(`扫描完成，找到 ${data.total} 张图像`, 'success');
+                    }
+                })
+                .catch(error => {
+                    showStatus('扫描失败: ' + error.message, 'error');
+                });
+            }
+        });
+        
+        function scanCustomPath() {
+            // 触发文件夹选择
+            document.getElementById('customFolder').click();
+        }
+        
+        function autoSelectFiles() {
+            showStatus('正在自动选择30条文件...', 'success');
+            updateProgress(0);
+            
+            // 调用扫描本地图像的API
+            fetch('/scan-local')
+            .then(response => response.json())
+            .then(data => {
+                if (data.error) {
+                    showStatus(data.error, 'error');
+                } else {
+                    updateProgress(100);
+                    displayResults({ images: data.images, total: data.total });
+                    showStatus(`自动选择完成，找到 ${data.total} 张图像`, 'success');
+                }
+            })
+            .catch(error => {
+                showStatus('自动选择失败: ' + error.message, 'error');
+            });
+        }
+        
+        function displayResults(results) {
+            const similarityGroups = document.getElementById('similarityGroups');
+            const imageGrid = document.getElementById('imageGrid');
+            
+            // 显示相似图像组
+            similarityGroups.innerHTML = '';
+            if (results.similarGroups && results.similarGroups.length > 0) {
+                results.similarGroups.forEach((group, index) => {
+                    const groupElement = document.createElement('div');
+                    groupElement.className = 'similarity-group';
+                    groupElement.innerHTML = `
+                        <h3>相似图像组 ${index + 1} (相似度: ${(group.similarity * 100).toFixed(1)}%)</h3>
+                        <div class="image-grid">
+                            ${group.images.map(img => `
+                                <div class="image-item">
+                                    <input type="checkbox" class="image-checkbox" data-path="${img.fullPath || img.path}" checked>
+                                    <img src="${img.path}" alt="${img.name}">
+                                    <p>${img.name}</p>
+                                    <small>日期: ${img.date}</small>
+                                    <small>文件夹: ${img.folder || '当前目录'}</small>
+                                </div>
+                            `).join('')}
+                        </div>
+                        <div class="action-buttons">
+                            <button onclick="mergeGroup(${index})">合并</button>
+                            <button onclick="skipGroup(${index})">跳过</button>
+                        </div>
+                    `;
+                    similarityGroups.appendChild(groupElement);
+                });
+            }
+            
+            // 显示所有图像
+            imageGrid.innerHTML = '';
+            if (results.images) {
+                // 处理从scan-local返回的图像数据
+                results.images.forEach(img => {
+                    const imageElement = document.createElement('div');
+                    imageElement.className = 'image-item';
+                    imageElement.innerHTML = `
+                        <input type="checkbox" class="image-checkbox" data-path="${img.fullPath || img.path}" checked>
+                        <img src="${img.path}" alt="${img.name}">
+                        <p>${img.name}</p>
+                        <small>日期: ${img.date}</small>
+                        <small>文件夹: ${img.folder || '当前目录'}</small>
+                    `;
+                    imageGrid.appendChild(imageElement);
+                });
+            } else if (results.allImages) {
+                // 处理传统的allImages数据
+                results.allImages.forEach(img => {
+                    const imageElement = document.createElement('div');
+                    imageElement.className = 'image-item';
+                    imageElement.innerHTML = `
+                        <input type="checkbox" class="image-checkbox" data-path="${img.fullPath || img.path}" checked>
+                        <img src="${img.path}" alt="${img.name}">
+                        <p>${img.name}</p>
+                        <small>日期: ${img.date}</small>
+                        <small>文件夹: ${img.folder || '当前目录'}</small>
+                    `;
+                    imageGrid.appendChild(imageElement);
+                });
+            }
+        }
+        
+        function scanLocalImages() {
+            showStatus('正在扫描本地图像...', 'success');
+            updateProgress(0);
+            
+            fetch('/scan-local')
+            .then(response => response.json())
+            .then(data => {
+                if (data.error) {
+                    showStatus(data.error, 'error');
+                    updateProgress(100);
+                } else {
+                    updateProgress(100);
+                    displayResults({allImages: data.images, similarGroups: []});
+                    showStatus(`扫描完成，共找到 ${data.total} 个图像`, 'success');
+                }
+            })
+            .catch(error => {
+                showStatus('扫描失败: ' + error.message, 'error');
+                updateProgress(100);
+            });
+        }
+        
+        function processAndOrganize() {
+            const checkboxes = document.querySelectorAll('.image-checkbox:checked');
+            const selectedImages = Array.from(checkboxes).map(cb => cb.dataset.path);
+            
+            if (selectedImages.length === 0) {
+                showStatus('请选择要分类存储的图像', 'error');
+                return;
+            }
+            
+            showStatus('正在分类存储图像...', 'success');
+            updateProgress(0);
+            
+            fetch('/process-selected', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({ images: selectedImages })
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.error) {
+                    showStatus(data.error, 'error');
+                } else {
+                    updateProgress(100);
+                    showStatus(`分类存储完成，已处理 ${data.total} 个图像`, 'success');
+                    // 重新扫描本地图像
+                    setTimeout(() => scanLocalImages(), 1000);
+                }
+            })
+            .catch(error => {
+                showStatus('分类存储失败: ' + error.message, 'error');
+                updateProgress(100);
+            });
+        }
+        
+        function mergeGroup(groupIndex) {
+            showStatus(`已合并图像组 ${groupIndex + 1}`, 'success');
+        }
+        
+        function skipGroup(groupIndex) {
+            showStatus(`已跳过图像组 ${groupIndex + 1}`, 'success');
+        }
+        
+        function clearResults() {
+            document.getElementById('similarityGroups').innerHTML = '';
+            document.getElementById('imageGrid').innerHTML = '';
+            document.getElementById('status').innerHTML = '';
+            document.getElementById('progressBar').style.width = '0%';
+        }
+        
+        function showStatus(message, type) {
+            const statusElement = document.getElementById('status');
+            statusElement.textContent = message;
+            statusElement.className = `status ${type}`;
+        }
+        
+        function updateProgress(percentage) {
+            document.getElementById('progressBar').style.width = `${percentage}%`;
+        }
+    </script>
+</body>
+</html>

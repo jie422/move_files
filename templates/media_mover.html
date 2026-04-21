@@ -1,0 +1,447 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>媒体文件整理工具</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #f5f5f5;
+            color: #333;
+        }
+
+        .container {
+            max-width: 900px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+
+        h1 {
+            text-align: center;
+            margin-bottom: 30px;
+            color: #2c3e50;
+        }
+
+        .card {
+            background-color: white;
+            padding: 25px;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+            margin-bottom: 20px;
+        }
+
+        .form-group {
+            margin-bottom: 20px;
+        }
+
+        label {
+            display: block;
+            margin-bottom: 8px;
+            font-weight: bold;
+            color: #555;
+        }
+
+        input[type="text"] {
+            width: 100%;
+            padding: 12px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            font-size: 14px;
+        }
+
+        input[type="text"]:focus {
+            outline: none;
+            border-color: #3498db;
+        }
+
+        .btn {
+            display: inline-block;
+            padding: 12px 30px;
+            background-color: #3498db;
+            color: white;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 16px;
+            margin-right: 10px;
+        }
+
+        .btn:hover {
+            background-color: #2980b9;
+        }
+
+        .btn-secondary {
+            background-color: #95a5a6;
+        }
+
+        .btn-secondary:hover {
+            background-color: #7f8c8d;
+        }
+
+        .btn-danger {
+            background-color: #e74c3c;
+        }
+
+        .btn-danger:hover {
+            background-color: #c0392b;
+        }
+
+        .progress-container {
+            display: none;
+            margin-top: 20px;
+        }
+
+        .progress-bar {
+            width: 100%;
+            height: 30px;
+            background-color: #ecf0f1;
+            border-radius: 4px;
+            overflow: hidden;
+        }
+
+        .progress-fill {
+            height: 100%;
+            background-color: #3498db;
+            width: 0%;
+            transition: width 0.3s;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-size: 14px;
+        }
+
+        .status-message {
+            margin-top: 15px;
+            padding: 15px;
+            border-radius: 4px;
+            display: none;
+        }
+
+        .status-success {
+            background-color: #d4edda;
+            color: #155724;
+            border: 1px solid #c3e6cb;
+        }
+
+        .status-error {
+            background-color: #f8d7da;
+            color: #721c24;
+            border: 1px solid #f5c6cb;
+        }
+
+        .status-info {
+            background-color: #d1ecf1;
+            color: #0c5460;
+            border: 1px solid #bee5eb;
+        }
+
+        .results {
+            margin-top: 20px;
+            max-height: 400px;
+            overflow-y: auto;
+        }
+
+        .result-item {
+            padding: 10px;
+            border-bottom: 1px solid #eee;
+            font-size: 14px;
+        }
+
+        .result-item:last-child {
+            border-bottom: none;
+        }
+
+        .file-list {
+            max-height: 300px;
+            overflow-y: auto;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            margin-top: 10px;
+        }
+
+        .tab-container {
+            margin-bottom: 20px;
+        }
+
+        .tab-btn {
+            padding: 10px 20px;
+            background-color: #ecf0f1;
+            border: none;
+            cursor: pointer;
+            font-size: 14px;
+            margin-right: 5px;
+        }
+
+        .tab-btn.active {
+            background-color: #3498db;
+            color: white;
+        }
+
+        .tab-content {
+            display: none;
+        }
+
+        .tab-content.active {
+            display: block;
+        }
+
+        .stats {
+            display: flex;
+            gap: 20px;
+            margin-bottom: 20px;
+        }
+
+        .stat-item {
+            flex: 1;
+            padding: 15px;
+            background-color: #ecf0f1;
+            border-radius: 4px;
+            text-align: center;
+        }
+
+        .stat-value {
+            font-size: 24px;
+            font-weight: bold;
+            color: #3498db;
+        }
+
+        .stat-label {
+            font-size: 14px;
+            color: #7f8c8d;
+            margin-top: 5px;
+        }
+
+        .info-text {
+            font-size: 12px;
+            color: #7f8c8d;
+            margin-top: 5px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>媒体文件整理工具</h1>
+
+        <div class="tab-container">
+            <button class="tab-btn active" onclick="showTab('organize')">文件整理</button>
+            <button class="tab-btn" onclick="showTab('clean')">清理空文件夹</button>
+        </div>
+
+        <div id="organize" class="tab-content active">
+            <div class="card">
+                <div class="form-group">
+                    <label for="sourcePath">源路径（包含媒体文件的文件夹）：</label>
+                    <input type="text" id="sourcePath" placeholder="例如：C:\Users\Photos\Camera">
+                    <p class="info-text">程序会递归搜索该文件夹及其子文件夹中的所有图片和视频文件</p>
+                </div>
+
+                <div class="form-group">
+                    <label for="destPath">目标路径（整理后的文件存放位置）：</label>
+                    <input type="text" id="destPath" placeholder="例如：D:\Organized\Media">
+                    <p class="info-text">图片将保存到 photos/年/月 文件夹，视频将保存到 videos/年/月 文件夹</p>
+                </div>
+
+                <button class="btn" onclick="startOrganize()">开始整理</button>
+                <button class="btn btn-secondary" onclick="cancelOperation()">取消</button>
+
+                <div class="progress-container" id="progressContainer">
+                    <div class="progress-bar">
+                        <div class="progress-fill" id="progressFill">0%</div>
+                    </div>
+                    <p id="progressText" style="margin-top: 10px; text-align: center;">正在处理...</p>
+                </div>
+
+                <div class="status-message" id="statusMessage"></div>
+
+                <div class="results" id="resultsContainer" style="display: none;">
+                    <h3 style="margin-bottom: 15px;">处理结果</h3>
+                    <div class="stats" id="statsContainer"></div>
+                    <div class="file-list" id="fileList"></div>
+                </div>
+            </div>
+        </div>
+
+        <div id="clean" class="tab-content">
+            <div class="card">
+                <div class="form-group">
+                    <label for="cleanPath">路径（要清理空文件夹的目录）：</label>
+                    <input type="text" id="cleanPath" placeholder="例如：D:\Organized\Media">
+                    <p class="info-text">程序会递归删除该文件夹及其子文件夹中的所有空文件夹</p>
+                </div>
+
+                <button class="btn btn-danger" onclick="startClean()">开始清理</button>
+
+                <div class="progress-container" id="cleanProgressContainer">
+                    <div class="progress-bar">
+                        <div class="progress-fill" id="cleanProgressFill">0%</div>
+                    </div>
+                    <p id="cleanProgressText" style="margin-top: 10px; text-align: center;">正在清理...</p>
+                </div>
+
+                <div class="status-message" id="cleanStatusMessage"></div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        let isCancelled = false;
+
+        function showTab(tabName) {
+            document.querySelectorAll('.tab-btn').forEach(btn => btn.classList.remove('active'));
+            document.querySelectorAll('.tab-content').forEach(content => content.classList.remove('active'));
+            document.querySelector(`[onclick="showTab('${tabName}')"]`).classList.add('active');
+            document.getElementById(tabName).classList.add('active');
+        }
+
+        function showStatus(message, type) {
+            const statusEl = document.getElementById('statusMessage');
+            statusEl.textContent = message;
+            statusEl.className = `status-message status-${type}`;
+            statusEl.style.display = 'block';
+        }
+
+        function showProgress(percent, text) {
+            const container = document.getElementById('progressContainer');
+            const fill = document.getElementById('progressFill');
+            const textEl = document.getElementById('progressText');
+
+            container.style.display = 'block';
+            fill.style.width = `${percent}%`;
+            fill.textContent = `${percent}%`;
+            textEl.textContent = text;
+        }
+
+        function hideProgress() {
+            document.getElementById('progressContainer').style.display = 'none';
+        }
+
+        function showResults(results) {
+            const container = document.getElementById('resultsContainer');
+            const stats = document.getElementById('statsContainer');
+            const fileList = document.getElementById('fileList');
+
+            stats.innerHTML = `
+                <div class="stat-item">
+                    <div class="stat-value">${results.total_moved}</div>
+                    <div class="stat-label">总移动文件数</div>
+                </div>
+                <div class="stat-item">
+                    <div class="stat-value">${results.photos.moved}</div>
+                    <div class="stat-label">图片数量</div>
+                </div>
+                <div class="stat-item">
+                    <div class="stat-value">${results.videos.moved}</div>
+                    <div class="stat-label">视频数量</div>
+                </div>
+                <div class="stat-item">
+                    <div class="stat-value">${results.total_failed}</div>
+                    <div class="stat-label">失败数量</div>
+                </div>
+            `;
+
+            let html = '<h4 style="margin-bottom: 10px;">图片文件：</h4>';
+            if (results.photos.files.length > 0) {
+                results.photos.files.forEach(file => {
+                    html += `<div class="result-item">📷 ${file.original.split(/[/\\]/).pop()} → ${file.date}/${file.new_path ? file.new_path.split(/[/\\]/).pop() : ''}</div>`;
+                });
+            } else {
+                html += '<div class="result-item" style="color: #7f8c8d;">无</div>';
+            }
+
+            html += '<h4 style="margin: 15px 0 10px;">视频文件：</h4>';
+            if (results.videos.files.length > 0) {
+                results.videos.files.forEach(file => {
+                    html += `<div class="result-item">🎬 ${file.original.split(/[/\\]/).pop()} → ${file.date}/${file.new_path ? file.new_path.split(/[/\\]/).pop() : ''}</div>`;
+                });
+            } else {
+                html += '<div class="result-item" style="color: #7f8c8d;">无</div>';
+            }
+
+            fileList.innerHTML = html;
+            container.style.display = 'block';
+        }
+
+        async function startOrganize() {
+            const sourcePath = document.getElementById('sourcePath').value.trim();
+            const destPath = document.getElementById('destPath').value.trim();
+
+            if (!sourcePath) {
+                showStatus('请输入源路径', 'error');
+                return;
+            }
+
+            if (!destPath) {
+                showStatus('请输入目标路径', 'error');
+                return;
+            }
+
+            isCancelled = false;
+            hideProgress();
+            document.getElementById('resultsContainer').style.display = 'none';
+            showStatus('正在开始整理...', 'info');
+
+            try {
+                const response = await fetch('/api/organize', {
+                    method: 'POST',
+                    headers: {'Content-Type': 'application/json'},
+                    body: JSON.stringify({
+                        source_path: sourcePath,
+                        destination_path: destPath
+                    })
+                });
+
+                const data = await response.json();
+
+                if (data.error) {
+                    showStatus(`错误: ${data.error}`, 'error');
+                } else {
+                    showResults(data);
+                    showStatus(`整理完成！共移动 ${data.total_moved} 个文件`, 'success');
+                }
+            } catch (error) {
+                showStatus(`请求失败: ${error.message}`, 'error');
+            }
+        }
+
+        function cancelOperation() {
+            isCancelled = true;
+            showStatus('操作已取消', 'info');
+        }
+
+        async function startClean() {
+            const cleanPath = document.getElementById('cleanPath').value.trim();
+
+            if (!cleanPath) {
+                showStatus('请输入要清理的路径', 'error');
+                return;
+            }
+
+            try {
+                const response = await fetch('/api/clean', {
+                    method: 'POST',
+                    headers: {'Content-Type': 'application/json'},
+                    body: JSON.stringify({path: cleanPath})
+                });
+
+                const data = await response.json();
+
+                if (data.error) {
+                    showStatus(`错误: ${data.error}`, 'error');
+                } else {
+                    showStatus(`清理完成！共删除 ${data.removed_count} 个空文件夹`, 'success');
+                }
+            } catch (error) {
+                showStatus(`请求失败: ${error.message}`, 'error');
+            }
+        }
+    </script>
+</body>
+</html>
