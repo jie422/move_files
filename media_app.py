@@ -31,7 +31,7 @@ try:
 except ImportError:
     print("pillow-heif not installed, HEIC images may not be supported")
 
-API_KEY = "sk-994395b2efb246e8a5fe66b23c5094ec"
+API_KEY = "替换KEY"
 API_URL = "https://dashscope.aliyuncs.com/compatible-mode/v1"
 SIMILARITY_THRESHOLD = 0.8
 

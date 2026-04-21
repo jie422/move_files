@@ -20,7 +20,7 @@ except ImportError:
 app = Flask(__name__)
 
 # 千文图像识别API配置
-API_KEY = "sk-994395b2efb246e8a5fe66b23c5094ec"  # 请替换为真实的API密钥
+API_KEY = ""  # 请替换为真实的API密钥
 API_URL = "https://dashscope.aliyuncs.com/compatible-mode/v1"  # 假设的API地址
 
 # 配置参数
