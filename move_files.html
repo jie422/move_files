@@ -145,12 +145,17 @@
             updateProgress(0);
             
             // 这里可以通过后端API调用Python脚本
-            // 由于是本地运行，我们可以通过URL参数传递路径
-            const url = `http://localhost:5000/api/organize?source_path=${encodeURIComponent(sourcePath)}&destination_path=${encodeURIComponent(destinationPath)}`;
+            // 使用相对路径避免跨域问题
+            const url = `/api/organize?source_path=${encodeURIComponent(sourcePath)}&destination_path=${encodeURIComponent(destinationPath)}`;
             
             fetch(url)
-                .then(response => response.json())
+                .then(response => {
+                    console.log('响应状态:', response.status);
+                    console.log('响应头:', response.headers);
+                    return response.json();
+                })
                 .then(data => {
+                    console.log('响应数据:', data);
                     if (data.error) {
                         showStatus(data.error, 'error');
                     } else {
@@ -159,6 +164,7 @@
                     }
                 })
                 .catch(error => {
+                    console.error('请求错误:', error);
                     showStatus('移动文件失败: ' + error.message, 'error');
                 });
         }
