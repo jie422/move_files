@@ -8,7 +8,7 @@ import shutil
 
 # 千文图像识别API配置
 API_KEY = "your_api_key_here"  # 请替换为真实的API密钥
-API_URL = "https://api.qianwen.com/v1/image/recognize"  # 假设的API地址
+API_URL = "url"  # 假设的API地址
 
 # 配置参数
 SIMILARITY_THRESHOLD = 0.8  # 相似度阈值
